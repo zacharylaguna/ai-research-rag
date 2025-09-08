@@ -89,7 +89,7 @@ nano .env
 
 2. **Build and start the system:**
 ```bash
-docker-compose up --build
+sudo docker-compose up --build
 ```
 
 ### Option 2: Local Development
@@ -123,13 +123,13 @@ python main.py
 **Docker (Background):**
 ```bash
 # Start in background (detached mode)
-docker-compose up -d
+sudo docker-compose up -d
 
 # Start with build (if you made code changes)
-docker-compose up -d --build
+sudo docker-compose up -d --build
 
 # Start and view logs
-docker-compose up --build
+sudo docker-compose up --build
 ```
 
 **Local Development:**
@@ -149,13 +149,13 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 **Docker:**
 ```bash
 # Stop all services
-docker-compose down
+sudo docker-compose down
 
 # Stop and remove volumes (clears database)
-docker-compose down -v
+sudo docker-compose down -v
 
 # Stop and remove everything (images, containers, networks)
-docker-compose down --rmi all -v
+sudo docker-compose down --rmi all -v
 ```
 
 **Local Development:**
@@ -170,16 +170,16 @@ pkill -f "python main.py"
 **Docker (after code changes):**
 ```bash
 # Rebuild and restart
-docker-compose down
-docker-compose up --build
+sudo docker-compose down
+sudo docker-compose up --build
 
 # Force rebuild (no cache)
-docker-compose build --no-cache
-docker-compose up
+sudo docker-compose build --no-cache
+sudo docker-compose up
 
 # Rebuild specific service
-docker-compose build rag-api
-docker-compose up
+sudo docker-compose build rag-api
+sudo docker-compose up
 ```
 
 **Local Development:**
@@ -196,10 +196,10 @@ pip install -r requirements.txt
 **Automated Testing:**
 ```bash
 # Run the comprehensive test script
-python test_api.py
+python3 test_api.py
 
 # Test with custom base URL
-BASE_URL=http://localhost:8000 python test_api.py
+BASE_URL=http://localhost:8000 python3 test_api.py
 ```
 
 **Manual API Testing:**
@@ -231,25 +231,25 @@ curl http://localhost:8000/stats
 **Docker Logs:**
 ```bash
 # View logs from all services
-docker-compose logs
+sudo docker-compose logs
 
 # Follow logs in real-time
-docker-compose logs -f
+sudo docker-compose logs -f
 
 # View logs from specific service
-docker-compose logs rag-api
+sudo docker-compose logs rag-api
 
 # View last 50 lines
-docker-compose logs --tail=50
+sudo docker-compose logs --tail=50
 ```
 
 **System Status:**
 ```bash
 # Check running containers
-docker-compose ps
+sudo docker-compose ps
 
 # Check system resources
-docker stats
+sudo docker stats
 
 # Check API health
 curl http://localhost:8000/health
@@ -263,9 +263,9 @@ curl http://localhost:8000/health
 curl -X DELETE http://localhost:8000/documents
 
 # Or stop system and remove ChromaDB data
-docker-compose down
+sudo docker-compose down
 sudo rm -rf ./chroma_db/*
-docker-compose up
+sudo docker-compose up
 ```
 
 **Backup Database:**
@@ -282,15 +282,15 @@ tar -xzf chroma_backup_YYYYMMDD_HHMMSS.tar.gz
 **Making Code Changes:**
 ```bash
 # 1. Stop the system
-docker-compose down
+sudo docker-compose down
 
 # 2. Make your changes to the code
 
 # 3. Rebuild and start
-docker-compose up --build
+sudo docker-compose up --build
 
 # 4. Test your changes
-python test_api.py
+python3 test_api.py
 ```
 
 **Adding New Dependencies:**
@@ -299,10 +299,10 @@ python test_api.py
 echo "new-package==1.0.0" >> requirements.txt
 
 # 2. Rebuild Docker image
-docker-compose build --no-cache
+sudo docker-compose build --no-cache
 
 # 3. Restart system
-docker-compose up
+sudo docker-compose up
 ```
 
 ### Troubleshooting
@@ -327,16 +327,16 @@ echo "API_PORT=8001" >> .env
 sudo usermod -aG docker $USER
 # Log out and back in
 
-# Or use sudo with docker commands
+# Use sudo with docker commands (required in most environments)
 sudo docker-compose up --build
 ```
 
 3. **ChromaDB issues:**
 ```bash
 # Clear database and restart
-docker-compose down -v
+sudo docker-compose down -v
 sudo rm -rf ./chroma_db
-docker-compose up --build
+sudo docker-compose up --build
 ```
 
 4. **LLM not responding:**
@@ -364,16 +364,16 @@ df -h
 **Debug Mode:**
 ```bash
 # Run with debug logging
-LOG_LEVEL=DEBUG docker-compose up
+LOG_LEVEL=DEBUG sudo docker-compose up
 
 # Or for local development
-LOG_LEVEL=DEBUG python main.py
+LOG_LEVEL=DEBUG python3 main.py
 ```
 
 **Performance Tuning:**
 ```bash
 # Monitor resource usage
-docker stats
+sudo docker stats
 
 # Adjust memory limits in docker-compose.yml
 # Add under rag-api service:
