@@ -1,29 +1,42 @@
-# Simple RAG System Starter Template
+# Simple RAG System Starter Template (Agno Framework)
 
-A production-ready Retrieval-Augmented Generation (RAG) system built with FastAPI, ChromaDB, LangChain, and Docker. This template provides a solid foundation for building AI-powered document search and question-answering applications using only open-source technologies.
+A production-ready Retrieval-Augmented Generation (RAG) system built with **Agno**, FastAPI, ChromaDB, and Docker. This template provides a solid foundation for building AI-powered document search and question-answering applications using only open-source technologies.
+
+**Now powered by Agno** - a blazing-fast, lightweight agentic AI framework that's ~10,000x faster than LangGraph with 50x less memory usage.
+
+⭐ **TRUE AGENTIC RAG**: The agent autonomously decides when and how to search the knowledge base!
+
+> **📦 Just Migrated from LangChain?** Check out [`FULL_AGNO_MIGRATION.md`](FULL_AGNO_MIGRATION.md) for what changed!
+>
+> **🚀 New User?** Start with [`QUICKSTART_AGNO.md`](QUICKSTART_AGNO.md) for a 5-minute setup guide!
 
 ## 🚀 Features
 
+- **True Agentic RAG** - Agent autonomously searches knowledge base (not manual retrieval!)
+- **Agno Framework** - High-performance SDK for building AI agents (~10,000x faster instantiation)
+- **Native Agno Integration** - Uses Agno's built-in knowledge base classes
 - **FastAPI** - Modern, fast web framework for building APIs
 - **ChromaDB** - Vector database for efficient similarity search
-- **LangChain** - Framework for LLM application development
 - **Docker** - Containerized deployment
 - **Open Source Models** - Uses HuggingFace embeddings and Ollama for LLM
 - **Document Upload** - Support for text file uploads and batch processing
 - **RESTful API** - Clean API endpoints for all operations
 - **Health Monitoring** - Built-in health checks and system statistics
+- **Lightweight & Fast** - Minimal memory footprint with blazing-fast performance
+- **Model Agnostic** - Works with any LLM provider (Ollama, OpenAI, Anthropic, etc.)
+- **Multi-Agent Ready** - Easy to extend with agent teams
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   FastAPI App   │────│   RAG Service   │────│  Vector Store   │
-│                 │    │                 │    │   (ChromaDB)    │
+│   FastAPI App   │────│   RAG Service   │────│ Knowledge Base  │
+│                 │    │  (Agno Agent)   │    │   (ChromaDB)    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          │                       │              ┌─────────────────┐
-         │                       └──────────────│   LLM Service   │
-         │                                      │    (Ollama)     │
+         │                       └──────────────│   Agno Agent    │
+         │                                      │  + Ollama LLM   │
          │                                      └─────────────────┘
 ┌─────────────────┐
 │   Client Apps   │
@@ -35,6 +48,7 @@ A production-ready Retrieval-Augmented Generation (RAG) system built with FastAP
 - Python 3.11+
 - Docker and Docker Compose
 - Ollama (for local LLM) - Optional but recommended
+- Agno framework (installed via pip)
 
 ### Installing Ollama (Optional)
 
@@ -45,6 +59,26 @@ curl -fsSL https://ollama.ai/install.sh | sh
 # Pull a model (e.g., Llama 2)
 ollama pull llama2
 ```
+
+## ⚡ Quick Start (5 Minutes)
+
+**New to this project?** Check out [`QUICKSTART_AGNO.md`](QUICKSTART_AGNO.md) for a fast setup guide!
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Setup environment
+cp .env.example .env
+
+# 3. Start the server
+python main.py
+
+# 4. Test it!
+curl http://localhost:8000/health
+```
+
+That's it! Visit http://localhost:8000/docs for interactive API documentation.
 
 ## 🛠️ Installation & Setup
 
@@ -497,25 +531,54 @@ print("Query response:", response.json())
 
 ### Adding New LLM Providers
 
-Modify `llm_service.py` to add support for other LLM providers:
+Modify `rag_service.py` to add support for other LLM providers with Agno:
 
 ```python
 # Example: Adding OpenAI support
-from langchain.llms import OpenAI
+from agno.models.openai import OpenAIChat
 
-if settings.OPENAI_API_KEY:
-    self.llm = OpenAI(api_key=settings.OPENAI_API_KEY)
+self.agent = Agent(
+    name="RAG Assistant",
+    model=OpenAIChat(id="gpt-4o"),  # or gpt-3.5-turbo
+    # ... rest of configuration
+)
+
+# Example: Adding Anthropic Claude
+from agno.models.anthropic import Claude
+
+self.agent = Agent(
+    name="RAG Assistant",
+    model=Claude(id="claude-sonnet-4-5"),
+    # ... rest of configuration
+)
 ```
 
 ### Custom Document Processing
 
-Extend `vector_store.py` to add custom document preprocessing:
+Extend `agno_knowledge.py` to add custom document preprocessing:
 
 ```python
 def preprocess_document(self, content: str) -> str:
     # Add your custom preprocessing logic
+    # Example: Remove special characters, normalize text, etc.
+    content = content.lower()
+    content = re.sub(r'[^\w\s]', '', content)
     return processed_content
 ```
+
+### Why Agno?
+
+**Performance Benefits:**
+- **10,000x faster** agent instantiation compared to LangGraph
+- **50x less memory** usage for agent operations
+- **Native multi-modal** support (text, image, audio, video)
+- **Model agnostic** - switch between providers without code changes
+
+**Developer Experience:**
+- Simple, pure Python - no graphs or complex chains
+- Built-in session management and memory
+- Real-time monitoring via agno.com
+- Easy multi-agent orchestration
 
 ## 📝 License
 

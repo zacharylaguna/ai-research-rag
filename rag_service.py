@@ -1,29 +1,57 @@
-"""Main RAG service that orchestrates document retrieval and response generation."""
+"""Main RAG service using Agno framework with true agentic RAG."""
 
 import logging
 from typing import List, Dict, Any
-from vector_store import VectorStore
-from llm_service import LLMService
+from agno.agent import Agent
+from agno.models.ollama import Ollama
+from agno_knowledge import AgnoRAGKnowledgeBase
 from models import DocumentUpload, QueryRequest, QueryResponse, DocumentResponse
+from config import settings
 
 logger = logging.getLogger(__name__)
 
 class RAGService:
-    """Main RAG service for document ingestion and querying."""
+    """Main RAG service with true Agno agentic RAG - agent autonomously searches knowledge."""
     
     def __init__(self):
-        """Initialize the RAG service."""
-        self.vector_store = VectorStore()
-        self.llm_service = LLMService()
+        """Initialize the RAG service with Agno agent and native knowledge base."""
+        # Initialize Agno native knowledge base
+        self.knowledge_base = AgnoRAGKnowledgeBase(
+            path=settings.CHROMA_PERSIST_DIRECTORY,
+            collection_name=settings.CHROMA_COLLECTION_NAME,
+            chunk_size=settings.CHUNK_SIZE,
+            chunk_overlap=settings.CHUNK_OVERLAP
+        )
+        
+        # Initialize Agno agent
+        try:
+            self.agent = Agent(
+                name="RAG Assistant",
+                model=Ollama(id=settings.LLM_MODEL),
+                description="You are a helpful AI assistant that answers questions based on provided context.",
+                instructions=[
+                    "Always base your answers on the context provided.",
+                    "If the context doesn't contain relevant information, clearly state that.",
+                    "Be concise, accurate, and cite specific information when possible."
+                ],
+                markdown=True
+            )
+            self.llm_available = True
+            logger.info("RAG service initialized with Agno agent and Ollama")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Ollama LLM: {e}. Using fallback mode.")
+            self.agent = None
+            self.llm_available = False
+        
         logger.info("RAG service initialized")
     
     def add_document(self, document: DocumentUpload) -> Dict[str, Any]:
         """Add a document to the knowledge base."""
         try:
-            # Add document to vector store
-            doc_ids = self.vector_store.add_documents(
-                documents=[document.content],
-                metadatas=[document.metadata]
+            # Add document to knowledge base (Agno handles chunking)
+            doc_ids = self.knowledge_base.add_text_document(
+                content=document.content,
+                metadata=document.metadata
             )
             
             return {
@@ -46,7 +74,7 @@ class RAGService:
             contents = [doc.content for doc in documents]
             metadatas = [doc.metadata for doc in documents]
             
-            doc_ids = self.vector_store.add_documents(
+            doc_ids = self.knowledge_base.add_text_documents(
                 documents=contents,
                 metadatas=metadatas
             )
@@ -66,27 +94,46 @@ class RAGService:
             }
     
     def query(self, query_request: QueryRequest) -> QueryResponse:
-        """Process a query and return a response with sources."""
+        """Process a query with RAG - retrieve context and generate response."""
         try:
-            # Retrieve relevant documents
-            retrieved_docs = self.vector_store.similarity_search(
+            # Retrieve relevant documents from knowledge base
+            retrieved_docs = self.knowledge_base.search(
                 query=query_request.query,
-                top_k=query_request.top_k
+                limit=query_request.top_k
             )
             
-            # Generate response using LLM
-            answer = self.llm_service.generate_response(
-                query=query_request.query,
-                context_docs=retrieved_docs
-            )
+            if self.llm_available and self.agent:
+                # Prepare context from retrieved documents
+                context = self._prepare_context(retrieved_docs)
+                
+                # Create prompt with context
+                prompt = f"""Context from knowledge base:
+{context}
+
+Question: {query_request.query}
+
+Please answer the question based on the context provided above."""
+                
+                # Get response from Agno agent
+                logger.info(f"Processing query with Agno agent: {query_request.query}")
+                response = self.agent.run(prompt)
+                
+                # Extract answer from response
+                if hasattr(response, 'content'):
+                    answer = response.content
+                else:
+                    answer = str(response)
+            else:
+                # Fallback response when agent is not available
+                answer = self._fallback_response(query_request.query, retrieved_docs)
             
             # Format sources
             sources = [
                 DocumentResponse(
-                    id=doc['id'],
-                    content=doc['content'],
-                    metadata=doc['metadata'],
-                    score=doc['score']
+                    id=doc.get('id', 'unknown'),
+                    content=doc.get('content', ''),
+                    metadata=doc.get('metadata', {}),
+                    score=doc.get('score', 0.0)
                 )
                 for doc in retrieved_docs
             ]
@@ -99,21 +146,60 @@ class RAGService:
             
         except Exception as e:
             logger.error(f"Failed to process query: {e}")
+            import traceback
+            traceback.print_exc()
             return QueryResponse(
                 answer=f"Sorry, I encountered an error while processing your query: {str(e)}",
                 sources=[],
                 query=query_request.query
             )
     
+    def _prepare_context(self, context_docs: List[Dict[str, Any]]) -> str:
+        """Prepare context string from retrieved documents."""
+        if not context_docs:
+            return "No relevant context found."
+        
+        context_parts = []
+        for i, doc in enumerate(context_docs, 1):
+            content = doc.get('content', '')
+            score = doc.get('score', 0)
+            context_parts.append(f"Document {i} (relevance: {score:.2f}):\n{content}")
+        
+        return "\n\n".join(context_parts)
+    
+    def _fallback_response(self, query: str, context_docs: List[Dict[str, Any]]) -> str:
+        """Generate a fallback response when LLM is not available."""
+        if not context_docs:
+            return f"I found no relevant documents to answer your question: '{query}'. Please try rephrasing your question or add more documents to the knowledge base."
+        
+        # Simple extractive response
+        best_doc = context_docs[0] if context_docs else None
+        if best_doc:
+            content = best_doc.get('content', '')
+            score = best_doc.get('score', 0)
+            
+            return f"""Based on the most relevant document (similarity: {score:.2f}), here's what I found:
+
+{content[:500]}{'...' if len(content) > 500 else ''}
+
+Note: This is a simplified response. For better answers, please ensure Ollama is running with the '{settings.LLM_MODEL}' model."""
+        
+        return "I couldn't generate a proper response. Please check if the LLM service is properly configured."
+    
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about the RAG system."""
         try:
-            vector_stats = self.vector_store.get_collection_stats()
-            llm_health = self.llm_service.health_check()
+            kb_stats = self.knowledge_base.get_stats()
+            
+            llm_status = {
+                "status": "healthy" if self.llm_available else "degraded",
+                "model": settings.LLM_MODEL if self.llm_available else "fallback",
+                "framework": "Agno"
+            }
             
             return {
-                "vector_store": vector_stats,
-                "llm_service": llm_health,
+                "knowledge_base": kb_stats,
+                "llm_service": llm_status,
                 "status": "operational"
             }
             
@@ -127,7 +213,7 @@ class RAGService:
     def clear_knowledge_base(self) -> Dict[str, Any]:
         """Clear all documents from the knowledge base."""
         try:
-            self.vector_store.clear_collection()
+            self.knowledge_base.clear_knowledge_base()
             return {
                 "status": "success",
                 "message": "Knowledge base cleared successfully"

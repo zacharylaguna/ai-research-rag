@@ -29,8 +29,14 @@ class Settings:
     # Retrieval settings
     SIMILARITY_TOP_K: int = 5
     
-    # Optional OpenAI settings
+    # Optional OpenAI settings (for Agno if using OpenAI models)
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    
+    # Agno settings
+    AGNO_API_KEY: str = os.getenv("AGNO_API_KEY", "")  # For Agno monitoring (optional)
+    
+    # Ollama settings
+    OLLAMA_HOST: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
 # Global settings instance
 settings = Settings()
