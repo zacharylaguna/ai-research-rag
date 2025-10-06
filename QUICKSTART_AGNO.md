@@ -233,6 +233,16 @@ OLLAMA_HOST=http://localhost:11434
 pip install -r requirements.txt
 ```
 
+### Issue: "Port already in use"
+
+```bash
+# Kill existing server
+sudo pkill -f "python main.py"
+
+# Or kill by port
+sudo lsof -ti:8000 | xargs sudo kill -9
+```
+
 ### Issue: "Ollama connection failed"
 
 ```bash

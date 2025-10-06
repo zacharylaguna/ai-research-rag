@@ -168,6 +168,9 @@ open http://localhost:8000/docs
 # Kill existing process
 sudo pkill -f "python main.py"
 
+# Alternative: Kill by port
+sudo lsof -ti:8000 | xargs sudo kill -9
+
 # Or use a different port in .env
 echo "API_PORT=8001" >> .env
 ```

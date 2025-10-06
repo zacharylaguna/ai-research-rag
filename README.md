@@ -4,27 +4,26 @@ A production-ready Retrieval-Augmented Generation (RAG) system built with **Agno
 
 **Now powered by Agno** - a blazing-fast, lightweight agentic AI framework that's ~10,000x faster than LangGraph with 50x less memory usage.
 
-⭐ **TRUE AGENTIC RAG**: The agent autonomously decides when and how to search the knowledge base!
+⭐ **HYBRID AGNO APPROACH**: Uses Agno Agent for intelligent responses with ChromaDB vector search!
 
-> **📦 Just Migrated from LangChain?** Check out [`FULL_AGNO_MIGRATION.md`](FULL_AGNO_MIGRATION.md) for what changed!
+> **📦 Just Migrated from LangChain?** Check out [`SETUP_COMPLETE.md`](SETUP_COMPLETE.md) for what changed!
 >
 > **🚀 New User?** Start with [`QUICKSTART_AGNO.md`](QUICKSTART_AGNO.md) for a 5-minute setup guide!
 
 ## 🚀 Features
 
-- **True Agentic RAG** - Agent autonomously searches knowledge base (not manual retrieval!)
-- **Agno Framework** - High-performance SDK for building AI agents (~10,000x faster instantiation)
-- **Native Agno Integration** - Uses Agno's built-in knowledge base classes
+- **Agno-Powered Responses** - Uses Agno Agent framework for intelligent AI responses
+- **Hybrid RAG Architecture** - Combines vector search with agent-based generation
+- **ChromaDB Vector Store** - Fast semantic search with sentence transformers
 - **FastAPI** - Modern, fast web framework for building APIs
-- **ChromaDB** - Vector database for efficient similarity search
-- **Docker** - Containerized deployment
+- **Docker** - Containerized deployment ready
 - **Open Source Models** - Uses HuggingFace embeddings and Ollama for LLM
 - **Document Upload** - Support for text file uploads and batch processing
 - **RESTful API** - Clean API endpoints for all operations
 - **Health Monitoring** - Built-in health checks and system statistics
 - **Lightweight & Fast** - Minimal memory footprint with blazing-fast performance
 - **Model Agnostic** - Works with any LLM provider (Ollama, OpenAI, Anthropic, etc.)
-- **Multi-Agent Ready** - Easy to extend with agent teams
+- **Production Ready** - Comprehensive error handling and logging
 
 ## 🏗️ Architecture
 
@@ -195,8 +194,12 @@ sudo docker-compose down --rmi all -v
 **Local Development:**
 ```bash
 # Press Ctrl+C in the terminal running the server
-# Or if running in background, find and kill the process
-pkill -f "python main.py"
+
+# Or if running in background, kill the process
+sudo pkill -f "python main.py"
+
+# Alternative: Find and kill by port
+sudo lsof -ti:8000 | xargs sudo kill -9
 ```
 
 ### Rebuilding the System
